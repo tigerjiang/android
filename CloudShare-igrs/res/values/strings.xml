@@ -1,0 +1,16 @@
+<resources>
+
+    <string name="app_name">智能分享</string>
+    <string name="local_device">本地设备</string>
+    <string name="letv_device">本地设备</string>
+    <string name="pic">图片</string>
+    <string name="music">音乐</string>
+    <string name="vedio">视频</string>
+    <string name="tip_install_igrs">请先安装基础库</string>
+    <string name="tip_install_device_service">请先安装设备发现服务</string>
+    <string name="no_wlan_tip">请先打开WLAN设备。</string>
+    <string name="setting">设置</string>
+    <string name="cancel">取消</string>
+    <string name="ok">确定</string>
+
+</resources>

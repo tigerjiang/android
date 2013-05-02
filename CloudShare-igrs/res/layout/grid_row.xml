@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="@dimen/media_content_pic_item_height"
+  android:layout_height="@dimen/media_content_pic_item_width"
+   >
+  <ImageView   
+     android:id="@+id/imageItem"   
+     android:layout_height="@dimen/media_content_pic_item_height"     
+     android:layout_width="@dimen/media_content_pic_item_width" 
+     android:scaleType="fitXY"  
+     android:layout_centerInParent="true"
+     >   
+  </ImageView>  
+         
+</RelativeLayout>

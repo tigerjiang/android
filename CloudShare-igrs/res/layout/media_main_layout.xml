@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <include layout="@layout/head_bar" />
+
+    <LinearLayout
+        android:id="@+id/media_devices_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_devices_bg"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:layout_width="@dimen/media_devices_item_width"
+            android:layout_height="@dimen/media_devices_layout_height"
+            android:background="@drawable/devices_item_selector"
+            android:clickable="true"
+            android:gravity="center|center_vertical" >
+
+            <ImageView
+                android:id="@+id/device_logo"
+                android:layout_width="@dimen/media_devices_logo_width"
+                android:layout_height="@dimen/media_devices_logo_height"
+                android:src="@drawable/ic_local_device_logo" />
+
+            <TextView
+                android:id="@+id/device_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/device_logo"
+                android:layout_marginTop="@dimen/media_devices_horizontal_divider"
+                android:text="@string/local_device"
+                android:textColor="@color/text_color_gray"
+                android:textSize="@dimen/media_devices_text_size" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="@dimen/media_devices_item_width"
+            android:layout_height="@dimen/media_devices_layout_height"
+            android:background="@drawable/devices_item_selector"
+            android:clickable="true"
+            android:gravity="center|center_vertical"
+            android:visibility="invisible" >
+
+            <ImageView
+                android:id="@+id/letv_device_logo"
+                android:layout_width="@dimen/media_devices_logo_width"
+                android:layout_height="@dimen/media_devices_logo_height"
+                android:src="@drawable/ic_letv_logo" />
+
+            <TextView
+                android:id="@+id/letv_device_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/letv_device_logo"
+                android:layout_marginTop="@dimen/media_devices_horizontal_divider"
+                android:text="@string/letv_device"
+                android:textColor="@color/text_color_gray"
+                android:textSize="@dimen/media_devices_text_size" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <RadioGroup
+        android:id="@+id/media_file_type_layout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/media_content_layout_height"
+        android:orientation="horizontal" >
+
+        <RadioButton
+            android:id="@+id/media_pic_layout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/tab_left_item_selector"
+            android:button="@null"
+            android:checked="true"
+            android:drawableLeft="@drawable/ic_picture"
+            android:gravity="center|center_vertical"
+            android:padding="20px"
+            android:singleLine="true"
+            android:text="@string/pic"
+            android:textColor="@color/text_color_white"
+            android:textSize="@dimen/media_tab_text_size" >
+        </RadioButton>
+
+        <RadioButton
+            android:id="@+id/media_music_layout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/tab_center_item_selector"
+            android:button="@null"
+            android:drawableLeft="@drawable/ic_music"
+            android:drawablePadding="@dimen/media_tab_divider"
+            android:gravity="center"
+            android:padding="20px"
+            android:singleLine="true"
+            android:text="@string/music"
+            android:textColor="@color/text_color_gray"
+            android:textSize="@dimen/media_tab_text_size" >
+        </RadioButton>
+
+        <RadioButton
+            android:id="@+id/media_video_layout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/tab_right_item_selector"
+            android:button="@null"
+            android:drawableLeft="@drawable/ic_video"
+            android:drawablePadding="@dimen/media_tab_divider"
+            android:gravity="center"
+            android:padding="20px"
+            android:singleLine="true"
+            android:text="@string/vedio"
+            android:textColor="@color/text_color_gray"
+            android:textSize="@dimen/media_tab_text_size" >
+        </RadioButton>
+    </RadioGroup>
+
+    <FrameLayout
+        android:id="@+id/details"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/ic_content_bg" />
+
+</LinearLayout>

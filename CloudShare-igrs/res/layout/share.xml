@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/ic_set_bg" >
+
+    <RelativeLayout
+        android:id="@+id/set_title_layout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/head_bar_height"
+        android:background="@drawable/ic_title_bg"
+ >
+
+        <Button
+            android:id="@+id/set_title_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/back_selector"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:text="返回"
+            android:textColor="@color/text_color_white" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+          android:layout_centerVertical="true"
+          android:layout_centerHorizontal="true"
+            android:text="设置共享"
+            android:textColor="@color/text_color_white"
+            android:textSize="@dimen/set_content_text_size" />
+        
+        <Button
+            android:id="@+id/set_title_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+             android:layout_centerVertical="true"
+             android:layout_marginRight="15px"
+            android:background="@drawable/device_selector"
+            android:gravity="center"
+            android:text="提交"
+            android:textColor="@color/text_color_white" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/set_share_layout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/set_content_layout_height"
+        android:layout_below="@+id/set_title_layout"
+        android:clickable="true"
+           android:layout_marginLeft="@dimen/set_content_layout_margin"
+        android:gravity="center_vertical" >
+
+        <TextView
+            android:id="@+id/local_dir"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+             android:textColor="@color/set_content_text_color"
+            android:textSize="@dimen/set_content_text_size"
+            android:text="本地目录:" />
+
+        <TextView
+            android:id="@+id/share_dir"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/local_dir"
+            android:text="本地目录"
+            android:textColor="@color/set_content_text_color"
+            android:textSize="@dimen/set_content_text_size" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/set_device_layout"
+        android:layout_width="@dimen/set_content_layout_width"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/set_share_layout"
+        android:layout_centerHorizontal="true"
+        android:clickable="true"
+        android:gravity="center_vertical" >
+        <ListView 
+            android:id="@+id/dir_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+           >
+            
+        </ListView>
+
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,19 @@
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/media_content_layout_width"
+    android:layout_height="@dimen/media_content_layout_height"
+    android:gravity="center"
+    android:clickable="true"
+    android:background="@drawable/tab_center_item_selector">
+    <ImageView 
+        android:id="@+id/tab_logo"
+        android:layout_width="@dimen/media_tab_logo_width"
+        android:layout_height="@dimen/media_tab_logo_height"/>
+    <TextView android:id="@+id/tab_label"
+        android:layout_toRightOf="@+id/tab_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_color_gray"
+        android:textSize="@dimen/media_tab_text_size"
+        />
+</RelativeLayout>

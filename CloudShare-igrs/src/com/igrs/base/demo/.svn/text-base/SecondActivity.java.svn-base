@@ -1,0 +1,156 @@
+package com.igrs.base.demo;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import android.app.Activity;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.RemoteException;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.igrs.base.android.util.IgrsType.DeviceType;
+import com.igrs.base.lan.IgrsLanInfo;
+import com.igrs.base.services.callbacks.IFetchLanFriendsListCallback;
+
+public class SecondActivity extends Activity {
+
+	private IgrsBaseProxyManager igrsBaseProxyManager = IgrsBaseProxyManager.getInstance();
+	
+	
+	 /** Called when the activity is first created. */
+		private String TAG=getClass().getSimpleName();
+	
+		private ListView listView;
+		private List<String> deviceList=new ArrayList<String>();
+		//private ArrayList<HashMap<String, Object>> deviceList=new ArrayList<HashMap<String, Object>>();
+		private Handler uiHandler=null;
+		//private MyBaseAdapter  adapter;
+		private Resources mResources = null;
+		private   Drawable dpic;
+		private Button open;
+		private Button close;
+		private TextView my_text;
+		private TextView timeDisplay;
+		private volatile	String currentStatus="none";
+		 ArrayAdapter<String> adapter;
+	    @Override
+	    public void onCreate(Bundle savedInstanceState) {
+	        super.onCreate(savedInstanceState);
+	       setContentView(R.layout.main1);
+			 mResources =getResources() ;
+			listView=(ListView) this.findViewById(R.id.mylistView2);
+			listView.setBackgroundColor(Color.BLUE);
+			dpic= mResources.getDrawable(R.drawable.tv);
+			open=(Button) this.findViewById(R.id.myopen2);
+			close=(Button) this.findViewById(R.id.myclose2);
+			my_text=(TextView)this.findViewById(R.id.my_text2);
+			timeDisplay=(TextView)this.findViewById(R.id.mytimeDisplay2);	 
+		
+			adapter=new ArrayAdapter<String>(SecondActivity.this,android.R.layout.simple_spinner_item,deviceList);
+			listView.setAdapter(adapter); 
+		    uiHandler=new Handler()
+			{
+				public void handleMessage(Message msg) {
+					
+					 Date date=new Date();
+		  	          SimpleDateFormat simple=new       SimpleDateFormat ();
+		  	          simple.applyPattern("yyyy-MM-dd hh:mm:ss");
+		  	           Log.i(TAG,currentStatus+"callback "+simple.format(date));
+		  	           String content=(String)my_text.getText();
+		  	           if(!content.startsWith(currentStatus))
+		  	           {
+		  	        	  my_text.setText( currentStatus+"回调时间："+simple.format(date));
+		  	           }
+					
+					 
+					  adapter.notifyDataSetChanged();
+						//  listView.addFooterView(newView);
+					    //  listView.addHeaderView(newView);
+						 listView.setVisibility(View.VISIBLE);
+				}
+			};
+			 /*taskEngine.scheduleAtFixedRate(new TimerTask(){
+
+				@Override
+				public void run() {
+					if(countService!=null)
+					{
+						deviceList.clear();
+						 try {
+							deviceList.addAll(countService.getCountResourceList());
+						} catch (RemoteException e) {
+							e.printStackTrace();
+						}
+						 Message msg=new  Message();
+						  msg.what=1;
+						uiHandler.sendMessage(msg);
+					}
+				}
+				 
+			 }
+			 , 1000,10000);*/
+		
+					List<IgrsLanInfo> friendsList=null;;
+					try {
+						friendsList = igrsBaseProxyManager.getLanNetWorkService().getFriendsList();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // 得到设备列表
+					if (friendsList != null && friendsList.size() > 0) {
+						for (IgrsLanInfo igrsLanInfo : friendsList) {
+							if (igrsLanInfo.getDeviceType() == DeviceType.tv
+									|| igrsLanInfo.getDeviceType() == DeviceType.pda)// 只显示pad和tv设备，不包括远程设备
+								deviceList.add(igrsLanInfo.getServiceName());
+						}
+					}
+	             listView.setVisibility(View.VISIBLE);
+	             
+	             try {
+						igrsBaseProxyManager.getLanNetWorkService().registerIFetchLanFriendsListCallback(ifetchFriendsCallBacks, "");
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+	   }   
+	    
+	    
+		private IFetchLanFriendsListCallback ifetchFriendsCallBacks = new IFetchLanFriendsListCallback.Stub() {
+
+			@Override
+			public void processFriendsUpdate(List<IgrsLanInfo> friendList)
+					throws RemoteException {
+
+				Message msg = new Message();
+				msg.obj = friendList; // list 为设备列表 更新ui操作
+				msg.what = GlobalControl.LOCAL_DEVICE_LIST_REFRESH;
+				deviceList.clear();
+	              for (IgrsLanInfo info: friendList) {
+	            	  deviceList.add(info.getServiceName());
+	              }
+				notifyHandler.sendMessage(msg);
+			}
+		};
+		
+		private Handler notifyHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				
+				adapter.notifyDataSetChanged();
+				 listView.setVisibility(View.VISIBLE);
+			}
+		};
+} 
+
+

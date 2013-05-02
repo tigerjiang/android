@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- media list(audio and vedio) resources pix -->
+    <dimen name="media_list_item_height">109px</dimen>
+    <dimen name="media_list_item_vertical_divider">50px</dimen>
+    <dimen name="media_list_vertical_divider">36px</dimen>
+    <dimen name="media_list_horizontal_divider">2px</dimen>
+    <dimen name="media_list_item_time_width">100px</dimen>
+     <dimen name="media_list_item_name_width">300px</dimen>
+     <dimen name="media_list_item_author_width">150px</dimen>
+    <dimen name="media_list_item_name_text_size">40px</dimen>
+    <dimen name="media_list_item_author_text_size">36px</dimen>
+    <dimen name="media_list_item_time_text_size">36px</dimen>
+
+    <!-- devices layout -->
+    <dimen name="media_devices_layout_height">203px</dimen>
+    <dimen name="media_devices_logo_height">101px</dimen>
+    <dimen name="media_devices_logo_width">101px</dimen>
+    <dimen name="media_devices_item_width">180px</dimen>
+    <dimen name="media_devices_horizontal_divider">10px</dimen>
+    <dimen name="media_devices_text_size">30px</dimen>
+    <!-- content tab -->
+    <dimen name="media_content_layout_height">135px</dimen>
+    <dimen name="media_content_layout_width">240px</dimen>
+    <dimen name="media_tab_logo_height">83px</dimen>
+    <dimen name="media_tab_logo_width">83px</dimen>
+    <dimen name="media_tab_divider">5px</dimen>
+    <dimen name="media_tab_text_size">42px</dimen>
+    <!-- head bar -->
+    <dimen name="head_bar_height">102px</dimen>
+    <dimen name="head_bar_title_text_size">42px</dimen>
+    <dimen name="head_bar_device_icon_width">108px</dimen>
+    <dimen name="head_bar_device_icon_height">61px</dimen>
+
+    <!-- pic content pix -->
+    <dimen name="media_content_pic_item_height">240px</dimen>
+    <dimen name="media_content_pic_item_width">213px</dimen>
+    <dimen name="media_content_pic_item_margin">28px</dimen>
+    <dimen name="media_content_pic_select_item_height">214px</dimen>
+    <dimen name="media_content_pic_select_item_width">190px</dimen>
+    <dimen name="media_content_pic_item_divider">12px</dimen>
+    <!--set content pix  -->
+    <dimen name="set_content_layout_height">110px</dimen>
+     <dimen name="set_content_layout_width">694px</dimen>
+    <dimen name="set_content_layout_margin">32px</dimen>
+     <dimen name="set_content_logo_width">40px</dimen>
+      <dimen name="set_content_logo_height">34px</dimen>
+    <dimen name="set_content_arrows_height">29px</dimen>
+     <dimen name="set_content_arrows_width">10px</dimen>
+     <dimen name="set_content_text_size">36px</dimen>
+     
+     <!--push dialog pix  -->
+     <dimen name="push_dialog_layout_height">580px</dimen>
+       <dimen name="push_dialog_layout_width">640px</dimen>
+         <dimen name="push_dialog_image_width">178px</dimen>
+         <dimen name="push_dialog_image_height">200px</dimen>
+         <dimen name="push_dialog_title_height">90px</dimen>
+         <dimen name="push_dialog_margin_top1">62px</dimen>
+          <dimen name="push_dialog_margin_top2">25px</dimen>
+          <dimen name="push_dialog_text_size">40px</dimen>
+          <dimen name="push_dialog_button_height">92px</dimen>
+          <dimen name="push_dialog_button_divider">10px</dimen>
+          <dimen name="puch_dilog_button_amrgin">15px</dimen>
+</resources>

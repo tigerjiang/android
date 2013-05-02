@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/set_content_layout_height" >
+
+    <CheckBox
+        android:id="@+id/dir_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/set_content_layout_margin"
+        android:button="@drawable/device_check"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+    <ImageView
+        android:id="@+id/arrows_img"
+        android:layout_width="@dimen/set_content_arrows_width"
+        android:layout_height="@dimen/set_content_arrows_height"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/set_content_layout_margin"
+        android:src="@drawable/ic_arrows_bg" />
+
+    <TextView
+        android:id="@+id/dir_name"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:singleLine="true"
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@+id/dir_check"
+        android:gravity="left|center_vertical"
+        android:text="本地目录"
+        android:textColor="@color/set_content_text_color"
+        android:textSize="@dimen/set_content_text_size" />
+
+</RelativeLayout>

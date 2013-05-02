@@ -1,0 +1,1073 @@
+/*******************************************************************************
+ * Copyright (C) 2011 wangbo
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package com.igrs.base.demo;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TabHost;
+import android.widget.TextView;
+
+import com.igrs.base.IProviderExporterService;
+import com.igrs.base.IgrsBaseConnectListener;
+import com.igrs.base.android.util.DeviceInfo;
+import com.igrs.base.android.util.IgrsType.DeviceType;
+import com.igrs.base.android.util.IgrsType.FileType;
+import com.igrs.base.android.util.ResourceInfo;
+import com.igrs.base.appcallbacks.IConnectionCallback;
+import com.igrs.base.demo.epg.EPGManager;
+import com.igrs.base.demo.widget.MyAdapter;
+import com.igrs.base.jingle.beans.JingleAccpetFileBean;
+import com.igrs.base.jingle.beans.JingleFileTransferBean;
+import com.igrs.base.lan.IgrsLanInfo;
+import com.igrs.base.lan.beans.LanServiceBean;
+import com.igrs.base.lan.beans.RenameDevicesBean;
+import com.igrs.base.lan.beans.ResouceLocalAddressUrlBean;
+import com.igrs.base.lenovo.netdesk.CurrentConnectUserInfoBean;
+import com.igrs.base.pakects.iqs.WifiHotspotSettingBean;
+import com.igrs.base.parcelable.ReferenceCmdInfoBean;
+import com.igrs.base.services.callbacks.IFetchDeviceListCallBack;
+import com.igrs.base.services.callbacks.IFetchLanFriendsListCallback;
+import com.igrs.base.services.callbacks.IFetchMultimediaResourceCallback;
+import com.igrs.base.services.callbacks.IPickupNetFriendsCallBack;
+import com.igrs.base.services.lantransfer.IgrsBaseExporterLanService;
+import com.igrs.base.util.ConstPart;
+import com.igrs.base.util.IgrsTag;
+import com.igrs.base.wan.assets.AssetRoster.EntityOperaterType;
+import com.igrs.base.wan.assets.AssetRoster.EntityType;
+
+public class MainActivity extends Activity {
+   
+	private String TAG = MainActivity.class.getSimpleName();
+	private IgrsBaseProxyManager igrsBaseProxyManager = IgrsBaseProxyManager.getInstance();
+	
+	
+	private EPGManager  epgManager = new EPGManager();
+	private CommManager  commManager = new CommManager();
+
+	
+	// 选择哪个设备的deviced
+	public static String deviceid;
+	// 选择设备的类型, 是pad,还是tv
+	public DeviceType deviceType;
+	
+	private IgrsBaseConnectListener igrsBaseConnectListener = null;
+	
+	ExecutorService  singleThread = Executors.newSingleThreadExecutor();
+	
+	private boolean isDisplayNet = false;
+	
+	/**
+	 * 网络状态
+	 */
+	private boolean serverConnecting = false, 
+	/**
+	 * wifi状态
+	 */
+	lanNetworkConnect = false,
+	/**
+	 * 3g 状态
+	 */
+	internetConnect = false;
+	private Handler netConnectHandler = null, notifyHandler;
+	private IProviderExporterService iProviderExporterService;
+	private IgrsBaseExporterLanService igrsBaseExporterLanService;
+	private ListView localListView;
+	private TransmissionMultiMediaManager transmissionMultiMediaManager;
+	List<String> fTemp = new ArrayList<String>();
+	private MyAdapter myAdapter;
+    private Button networkBnt;
+    private EditText url;
+    private EditText editCount;
+    private EditText editInterval;
+    private TextView message;
+    
+    private String who;
+    private Button button1;
+    private Button button2;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
+		// createTabHost();
+		myAdapter = new MyAdapter(LayoutInflater.from(this), fTemp);
+		localListView = (ListView) findViewById(R.id.listView1);
+		localListView.setAdapter(myAdapter);
+		localListView.setOnItemClickListener(iemClickListener);
+		localListView.setVisibility(View.VISIBLE);
+		url= (EditText) findViewById(R.id.url);
+		editCount =(EditText) findViewById(R.id.editCount);
+		editInterval = (EditText) findViewById(R.id.editInterval);
+		 /*try
+		 {
+			 String macAddress = Settings.System.getString(null,"ro.ubootenv.varible.prefix.ethaddr");
+	  	String 	 licenseCode = Settings.System.getString(null,"ro.ubootenv.varible.prefix.igrsid");
+	  	
+	  	  url.setText(macAddress+"licenseCode:"+licenseCode);
+		 }catch(NullPointerException ex){
+			 ex.printStackTrace(); 
+			  url.setText("");
+		 }*/
+	
+		isDisplayNet = false;
+		networkBnt=(Button)findViewById(R.id.network);
+		message= (TextView) findViewById(R.id.message);
+		
+		
+		button1= (Button) findViewById(R.id.myButton);
+		button2= (Button) findViewById(R.id.myBotton2);
+		
+		button1.setOnClickListener(new View.OnClickListener(){
+
+			@Override
+			public void onClick(View v) {
+				
+				  /* Date date=new Date();
+      	            SimpleDateFormat simple=new       SimpleDateFormat ();
+      	           simple.applyPattern("yyyy-MM-dd hh:mm:ss");
+      	            Log.i(TAG,"begin serverice"+simple.format(date));
+      	            closeOrstartLanBaseService(47);*/
+				// tranfileFileWithJingle();
+				
+				/*EPGVersionBean versionBean=new EPGVersionBean();
+				versionBean.setTo(who);
+				versionBean.isRequest=true;
+				igrsBaseProxyManager.sendQueryBaseBean(versionBean,null,null);*/
+				WifiHotspotSettingBean wifiHotspotSettingBean=new WifiHotspotSettingBean();
+				wifiHotspotSettingBean.ssid="wangbo";
+				wifiHotspotSettingBean.pwd="12345678";
+				wifiHotspotSettingBean.requestcmd=true;
+				wifiHotspotSettingBean.defaultMode =WifiHotspotSettingBean.ApActionMode.OPEN;
+				//igrsBaseProxyManager.sendQueryBaseBean(wifiHotspotSettingBean,null,null);
+				/*EpgTotalPagesBean epgTotalPagesBea = new EpgTotalPagesBean();
+				epgTotalPagesBea.setTo(who);
+				epgTotalPagesBea.isRequest = true;*/
+				//igrsBaseProxyManager.sendQueryBaseBean(wifiHotspotSettingBean,null,null);
+				
+				
+			   String proptString = null;
+			   int interval= Integer.parseInt(editInterval.getText().toString());
+			   if(interval<=1000)  interval =1000;
+			   final  int interval_content = interval;
+			   final   String content = url.getText().toString();
+			
+			 
+				if(who==null||who.length()==0)
+				{
+					
+					proptString = "请选择设备";
+					proptMsg(proptString);
+				} else if (content ==null || content.length()==0)
+				{
+					proptString = "请输入内容";
+					proptMsg(proptString);
+				}else
+				{
+					//epgManager.EPGTvListSearchWord(who);
+					  boolean isExits=false;
+					  
+					   for (String devices:fTemp)  {
+						  
+						  if (who.equalsIgnoreCase(devices)) {
+							
+							   singleThread.submit(new Runnable(){
+                               		
+								   @Override
+									public void run() {
+									
+									
+										int count = Integer.parseInt(editCount.getText().toString());
+										for (int i =0;i<count;i++)
+										{
+											
+											 transmissionMultiMediaManager.sendBigContent(who, content,isDisplayNet);
+											 try {
+												Thread.sleep(interval_content);
+											} catch (InterruptedException e) {
+												e.printStackTrace();
+											}
+										}
+									}    
+							    }
+							   );
+							  isExits =true;
+						   }
+					   }
+					   if (!isExits){
+						   proptMsg("设备不在线");
+					   }
+				}
+			}
+			
+		});
+		
+		button2.setOnClickListener(new View.OnClickListener(){
+			
+			@Override
+			public void onClick(View v) {
+				// tranfileFileWithJingle();
+/*
+				   Date date=new Date();
+   	            SimpleDateFormat simple=new       SimpleDateFormat ();
+   	           simple.applyPattern("yyyy-MM-dd hh:mm:ss");
+   	           Log.i(TAG,"close serverice"+simple.format(date));
+   	           closeOrstartLanBaseService(48);*/
+   		/*	LanReferenceCmdInfoBean lanReferenceCmdInfoBean=new LanReferenceCmdInfoBean();
+   			lanReferenceCmdInfoBean.setCmdClass("msgInputMethod");
+   			lanReferenceCmdInfoBean.setCmdType("input");
+   			lanReferenceCmdInfoBean.setCmdCtrl("set");
+   			lanReferenceCmdInfoBean.setCmdParam("igrs");
+   			lanReferenceCmdInfoBean.setCmdValue("dfdfd<>dfdnfdife ok");
+   			Messenger msg = new Messenger(netConnectHandler);
+   			try {
+				igrsBaseExporterLanService.sendLanCmdMessage(lanReferenceCmdInfoBean, msg);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}*/
+				
+	    /*   EpgTotalPagesBean epgTotalPagesBean=new EpgTotalPagesBean();
+				
+				epgTotalPagesBean.setTo(who);
+				epgTotalPagesBean.isRequest=true;
+				 //如果连续的发送，这个不需填写，在回调的时候，
+				//
+				epgTotalPagesBean.setId("fheufdscsdfh");
+			     igrsBaseProxyManager.sendQueryBaseBean(epgTotalPagesBean,null,null);*/
+			/*	
+				WifiHotspotSettingBean wifiHotspotSettingBean=new WifiHotspotSettingBean();
+				wifiHotspotSettingBean.ssid="wangbo";
+				wifiHotspotSettingBean.pwd="123456";
+				wifiHotspotSettingBean.requestcmd=true;
+				wifiHotspotSettingBean.defaultMode =WifiHotspotSettingBean.ApActionMode.CLOSE;
+				
+			    igrsBaseProxyManager.sendQueryBaseBean(wifiHotspotSettingBean,null,null);
+				*/
+				
+				 if (isDisplayNet) //
+				 {
+						List<IgrsLanInfo> friendsList;
+						try {
+							 fTemp.clear();
+							friendsList = igrsBaseProxyManager.getLanNetWorkService().getFriendsList();
+						
+							if (friendsList != null && friendsList.size() > 0) {
+								for (IgrsLanInfo igrsLanInfo : friendsList) {
+									if (igrsLanInfo.getDeviceType() == DeviceType.tv
+											|| igrsLanInfo.getDeviceType() == DeviceType.pda)// 只显示pad和tv设备，不包括远程设备
+										fTemp.add(igrsLanInfo.getServiceName());
+								}
+							}
+							
+						} catch (RemoteException e) {
+						
+							e.printStackTrace();
+						} // 得到设备列表
+						
+						MainActivity.this.setTitle("lan");
+					    isDisplayNet=false;
+				 }  else
+				 {
+					 
+					 try {
+							List<ContentValues> netFriendsList = igrsBaseProxyManager.getConnectService().getNetFriendsList();
+						 
+							 fTemp.clear();
+							  for (ContentValues devices:netFriendsList)
+							  {
+									String userName = devices.getAsString(ConstPart.RosterItems.FullName);  
+									boolean isOnline = devices.getAsBoolean(ConstPart.RosterItems.PRESENCE_LINE);
+									if (userName!=null&&isOnline)
+									 fTemp.add(userName);
+							  }
+					 
+					         } catch (RemoteException e) {
+							e.printStackTrace();
+						  }
+						MainActivity.this.setTitle("wlan");
+					   isDisplayNet = true;
+				 }
+				
+					Message msg = new Message();
+					msg.what = GlobalControl.LOCAL_DEVICE_LIST_REFRESH;
+					notifyHandler.sendMessage(msg);
+				
+					
+					singleThread.execute(new Runnable(){
+						
+						public void run()
+						{
+							Enumeration<NetworkInterface> enumeration =null;
+							try {
+								enumeration = NetworkInterface.getNetworkInterfaces();
+							} catch (SocketException e3) {
+						
+								e3.printStackTrace();
+							}
+							 NetworkInterface eth0 = null;
+						        while (enumeration!=null&&enumeration.hasMoreElements() ){
+						            eth0 = enumeration.nextElement();
+						          
+						              
+						            	
+						            	for (Enumeration<InetAddress> enumIpAddr = eth0.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+											InetAddress inetAddress = enumIpAddr.nextElement();
+											if (!inetAddress.isLoopbackAddress()&&(inetAddress instanceof Inet4Address)) {
+												
+												 Log.i(TAG, eth0.getName());
+										         Log.i(TAG, inetAddress.getHostAddress());
+										         Log.i(TAG, "---------------"+inetAddress.getHostName());
+										         Log.i(TAG,"----------------------------");
+											}
+										
+						            }
+						           
+						        }	
+						}
+						
+					});	
+			}
+		});
+		
+		networkBnt.setOnClickListener(new View.OnClickListener() {
+	           public void onClick(View arg0) {
+	              connect();
+	           }
+	       });
+		netConnectHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+
+				if (msg.arg2 == GlobalControl.SERVICE_CONNECT_SUCCESS) {
+					igrsBaseConnectListener.onServiceConnected();
+				} else if (msg.arg2 == GlobalControl.SERVICE_CONNECT_FAILURE) {
+					android.os.Process.killProcess(android.os.Process.myPid());
+				}
+			}
+		};
+		
+		notifyHandler = new Handler() {
+		
+			@Override
+			public void handleMessage(Message msg) {
+				if (msg.what == GlobalControl.LOCAL_DEVICE_LIST_REFRESH) {
+				
+					myAdapter.notifyDataSetChanged();
+					
+					localListView.setVisibility(View.VISIBLE);
+				       Date date=new Date();
+	       	            SimpleDateFormat simple=new       SimpleDateFormat ();
+	       	           simple.applyPattern("yyyy-MM-dd hh:mm:ss");
+	       	           Log.i(TAG,"i receiver ,message:"+simple.format(date));
+	       	           
+				} else if (msg.what == GlobalControl.File_JINGLE_RECEIVE){
+					
+					JingleAccpetFileBean jingleAccpetFileBean=(JingleAccpetFileBean)msg.obj;
+					String url = "http://"+jingleAccpetFileBean.getFullIP()+':'+jingleAccpetFileBean.getFullPort()+jingleAccpetFileBean.getFilePath();
+					Uri uri = Uri.parse(url);
+					Intent it = new Intent(Intent.ACTION_VIEW); 
+					it.setDataAndType(uri, "audio/mp3"); 
+					startActivity(it);
+				}  else if (msg.what == GlobalControl.SEND_CONTROL_CMD_RCV) {
+					
+					 ReferenceCmdInfoBean  referenceCmdInfoBean = (ReferenceCmdInfoBean)msg.obj;
+					 
+					 String display =  referenceCmdInfoBean.getFrom()+":"+referenceCmdInfoBean.getCmdValue();
+					   Context context = MainActivity.this;
+						Dialog dialog = new AlertDialog.Builder(context).setTitle("发送反馈").setMessage(display)
+						.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+		                    public void onClick(DialogInterface dialog, int whichButton) {
+		   
+		                    	dialog.dismiss();
+		                    }
+		                })
+		               .create();
+						dialog.show();
+					
+				} else if (msg.arg1 ==2000) {
+				  
+					Context context = MainActivity.this;
+					Dialog dialog = new AlertDialog.Builder(context).setTitle("发送测试").setMessage("操作成功")
+					.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+	                    public void onClick(DialogInterface dialog, int whichButton) {
+	   
+	                    	dialog.dismiss();
+	                    }
+	                })
+	               .create();
+					dialog.show();
+				}else   
+				{
+					
+				}
+			}
+		};
+		try {
+			igrsBaseProxyManager.connectToIgrsBaseService(this,
+					netConnectHandler);
+		  } catch (RemoteException e) {
+			Message msg = new Message();
+			msg.arg2 = GlobalControl.SERVICE_CONNECT_FAILURE;
+			netConnectHandler.sendMessage(msg);
+		}
+		igrsBaseConnectListener = new IgrsBaseConnectListener() {
+			
+			@Override
+			public void onServiceConnected() {
+				initHandlerCallBack();
+				try {
+					igrsBaseExporterLanService = igrsBaseProxyManager
+							.getLanNetWorkService();
+					if (igrsBaseExporterLanService == null) {
+						return;
+					}
+				  } catch (RemoteException e2) {
+					 e2.printStackTrace();
+					 return;
+				  }
+				try {
+					 iProviderExporterService = igrsBaseProxyManager.getConnectService();
+				
+					 if (iProviderExporterService != null)
+						 iProviderExporterService.registerConnectionCallback(iConnectionCallback); // 注册广域网连接状态回调
+				    } catch (RemoteException e2) {
+					 e2.printStackTrace();
+				  }
+
+				//所有推送接口，用户当推送局域网资源和广域网资源，都可以用
+				transmissionMultiMediaManager = new TransmissionMultiMediaManager(MainActivity.this, iProviderExporterService,igrsBaseExporterLanService, notifyHandler);
+				igrsBaseProxyManager.registerIgrsProxyResultConnectHandler(IgrsTag.SEND_COMMAND_CONTROL, notifyHandler);
+				 try {
+					  lanNetworkConnect = igrsBaseProxyManager.getConnectService().isLanNetWorkConnecting(); // 判断局域网网络状态
+				     } catch (RemoteException e1) {
+					  e1.printStackTrace();
+				     }
+				     
+				 try {
+					List<IgrsLanInfo> friendsList = igrsBaseProxyManager.getLanNetWorkService().getFriendsList(); // 得到设备列表
+					if (friendsList != null && friendsList.size() > 0) {
+						for (IgrsLanInfo igrsLanInfo : friendsList) {
+							if (igrsLanInfo.getDeviceType() == DeviceType.tv
+									|| igrsLanInfo.getDeviceType() == DeviceType.pda)// 只显示pad和tv设备，不包括远程设备
+								fTemp.add(igrsLanInfo.getServiceName());
+						}
+					}
+					Log.i(TAG, String.valueOf(friendsList.size()));
+				  } catch (RemoteException e) {
+					 e.printStackTrace();
+				  }
+
+				/**
+				 * 要获取基础协议栈资源列表
+				 */
+				
+				IFetchMultimediaResourceCallback  resourceCallBack=new IFetchMultimediaResourceCallback.Stub() {
+					
+					@Override
+					public void processMultimediaResource(List<ResourceInfo> arg0)
+							throws RemoteException {
+						
+						for(ResourceInfo resourceInfo:arg0)
+						{
+							Log.d(TAG,  resourceInfo.getName());
+							Log.d(TAG,  resourceInfo.getUrl());
+							Log.d(TAG,  "-----next------");
+						}
+					}
+				};
+				 Map<String,String> map=new HashMap<String,String>();
+				 map.put("pageIndex", "0");
+				 map.put("pageCount", "10");
+				 map.put("fileType", FileType.music.name());
+				 //查询音乐文件，从0开始的10个数据
+				/*try {
+					igrsBaseProxyManager.getLanNetWorkService().requestMultimediaResourceList("",  resourceCallBack, map);
+				} catch (RemoteException e1) {
+					e1.printStackTrace();
+				}*/
+				//注册局域网设备时时更新回调函数
+				try {
+					igrsBaseProxyManager.getLanNetWorkService().registerIFetchLanFriendsListCallback(ifetchFriendsCallBacks, "");
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			
+			
+				final IFetchDeviceListCallBack iFetchDeviceListCallBack =  new IFetchDeviceListCallBack.Stub() {
+
+					@Override
+					public void processResource(List<DeviceInfo> arg0)throws RemoteException {
+						
+						for (DeviceInfo deviceInfo:arg0)
+						{
+							//deviceInfo.deviceid ; 对方设备网络
+							//deviceInfo.name;  名称
+						//	deviceInfo.status //DeviceStatus.online  状态
+						//	deviceInfo.type //DeviceType.tv  类型
+						}
+						
+					}
+					
+				};
+			
+				Messenger acknowledgement =new Messenger(netConnectHandler);
+				try {
+					iProviderExporterService.getBindDeviceResource(iFetchDeviceListCallBack, acknowledgement);
+				} catch (RemoteException e1) {
+					e1.printStackTrace();
+				}
+				
+				
+				
+		
+				 /*WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);  
+				 WifiInfo info = wifi.getConnectionInfo();  
+		         if(info!=null)
+		         {
+		        	  Log.i(TAG, "mac:"+info.getMacAddress()); 
+		         }*/
+		     	 //localListView.setVisibility(View.VISIBLE);
+				
+				 /*try {
+					List<ContentValues> netFriendsList = igrsBaseProxyManager.getConnectService().getNetFriendsList();
+				  } catch (RemoteException e) {
+					e.printStackTrace();
+				  }*/
+		     	 IPickupNetFriendsCallBack iPickupNetFriendsCallBack= new IPickupNetFriendsCallBack.Stub() {
+
+					@Override
+					public void processNetFriendsUpdate(ContentValues values,String arg1, String arg2) throws RemoteException {
+						
+						
+						if (isDisplayNet)
+						{
+							String userName =values.getAsString(ConstPart.RosterItems.FullName);
+							String nickName =values.getAsString(ConstPart.RosterItems.NAME);
+							String currentTips =values.getAsString(ConstPart.RosterItems.PRESENCE_STATUS);
+							// online or offline
+							boolean isonline = values.getAsBoolean(ConstPart.RosterItems.PRESENCE_LINE);
+							
+							EntityOperaterType entityOperaterType = EntityOperaterType.valueOf(arg1);
+							//好友添加
+							if(entityOperaterType == EntityOperaterType.ADD)
+							{
+								if (isonline)
+								fTemp.add(userName);
+							}
+							//好友状态改变
+							if(entityOperaterType == EntityOperaterType.CHANGE)
+							{
+								if (fTemp.contains(userName))
+								{
+									if (!isonline)
+									{
+										fTemp.remove(userName);
+									}
+								} else
+								{
+									if (isonline)
+									fTemp.add(userName);
+								}
+							
+								  
+							}
+							//好友被删除
+							else if (entityOperaterType == EntityOperaterType.REMOVE)
+							{
+								//values 是null
+								fTemp.remove(userName);
+							}	
+						
+						
+							String  setStaus =values.getAsString(ConstPart.RosterItems.PRESENCE_MODE);
+					  
+							
+							
+							EntityType entityType = EntityType.valueOf(arg2);
+							if(EntityType.user == entityType)
+							{
+								// 用户类型
+							} else if (EntityType.device ==entityType)
+							{
+							  //设备类型
+							}
+							
+							Message msg = new Message();
+							msg.what = GlobalControl.LOCAL_DEVICE_LIST_REFRESH;
+							notifyHandler.sendMessage(msg);
+						}
+						
+					}	
+				};
+				try {
+					igrsBaseProxyManager.getConnectService().registerIPickupNetFriendsCallBack(iPickupNetFriendsCallBack);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+				//transmissionMultiMediaManager.sendLanResourceToLanFriends(FileType.music, toTerminalType, condtions);
+			}
+			
+
+			@Override
+			public void onServiceDisconnected() {
+
+			}
+		};
+
+	}
+
+    private void connect() {
+        PageTask task = new PageTask(this);
+      task.execute(url.getText().toString());
+     }
+
+    /**
+     *  向局域网设备推送局域网资源
+     */
+	public void pushLanResourceToDevice() {
+		
+		 FileType fileType = FileType.pic;// 图片
+		 // FileType fileType = FileType.music;//音乐
+		 // FileType fileType = FileType.video;//视频
+	
+
+		Map<String, String> condtions = new HashMap<String, String>();
+		condtions.put("title", "名称");
+		condtions.put("cid", fileType.name());
+		condtions.put("gid", "地址");
+		condtions.put("deviceid", "M280");
+		deviceType=DeviceType.pda;
+		transmissionMultiMediaManager.sendLanResourceToLanFriends(fileType,deviceType, condtions);
+	}
+
+	public void pushWanResourceToDevice() {// 向局域网设备推送互联网资源
+		/****************************************** 奇艺 *********************/
+		FileType fileType = FileType.qiyiReference;
+		StringBuffer sb = new StringBuffer();
+		sb.append("{");
+		sb.append("\"videoid\":\"videoid\",");
+		sb.append("\"albumid\":\"albumid\",");
+		sb.append("\"offset\":0");
+		sb.append("}");
+		Map<String, String> condtionsQ = new HashMap<String, String>();
+		condtionsQ.put("title", "名称");
+		condtionsQ.put("gid", sb.toString());
+		condtionsQ.put("videoId", "videoId");
+		condtionsQ.put("albumId", "albumid");
+		condtionsQ.put("offset", "0");
+		transmissionMultiMediaManager.sendNetResourceToLanFriends(fileType,
+				condtionsQ);
+		/****************************************** 乐视 *********************/
+		fileType = FileType.leShi;
+		Map<String, String> condtionsL = new HashMap<String, String>();
+		StringBuffer sbLS = new StringBuffer();
+		sbLS.append("{");
+		sbLS.append("\"url\":\"地址\",");
+		sbLS.append("\"name\":\"影片名\",");
+		sbLS.append("\"videoid\":\"\",");
+		sbLS.append("\"albumid\":\"\",");
+		sbLS.append("\"offset\":\"0\"");
+		sbLS.append("}");
+		condtionsL.put("gid", sb.toString());
+		transmissionMultiMediaManager.sendNetResourceToLanFriends(fileType,
+				condtionsL);
+
+		LanServiceBean lanServiceBean = new LanServiceBean();
+		lanServiceBean.setStartLanService(true);
+		lanServiceBean.setFactoryId("hisense");
+		lanServiceBean.setFactoryName("hisense");
+		
+		igrsBaseProxyManager.sendQueryBaseBean(lanServiceBean,netConnectHandler,IgrsTag.START_LAN_STATUS);
+
+	}
+
+	private IConnectionCallback iConnectionCallback = new IConnectionCallback.Stub() {
+
+		@Override
+		public void onConnectionChanged(boolean connected)
+				throws RemoteException {
+			serverConnecting = connected;// 服务器连接状态
+		}
+
+		@Override
+		public void onConnectionLanChanged(boolean wificonnected)
+				throws RemoteException {
+			lanNetworkConnect = wificonnected;// 局域网网络状态改变时
+		}
+
+		@Override
+		public void onConnectionInternetChanged(boolean internetConnected)
+				throws RemoteException {
+			internetConnect = internetConnected; // 外网
+		}
+
+		@Override
+		public void onRunningException(boolean runningException)
+				throws RemoteException {
+			// 抛异常时
+		}
+
+		@Override
+		public void serviceLoadingFinish() throws RemoteException {
+			// TODO Auto-generated method stub
+
+		}
+	};
+
+	// 注册的回调函数， 用于更新设备列表，开发人员只需要把friendlist的值取出来即可
+	private IFetchLanFriendsListCallback ifetchFriendsCallBacks = new IFetchLanFriendsListCallback.Stub() {
+
+		@Override
+		public void processFriendsUpdate(List<IgrsLanInfo> friendList)
+				throws RemoteException {
+                  
+			
+			if (!isDisplayNet)
+			{
+				Message msg = new Message();
+				msg.obj = friendList; // list 为设备列表 更新ui操作
+				msg.what = GlobalControl.LOCAL_DEVICE_LIST_REFRESH;
+				fTemp.clear();
+	              for (IgrsLanInfo info: friendList) {
+	       			 fTemp.add(info.getServiceName());
+	              }
+				notifyHandler.sendMessage(msg);	
+			}
+		}
+	};
+
+	@Override
+	protected void onDestroy() {
+		igrsBaseProxyManager.unBindOndestry(MainActivity.this);
+		super.onDestroy();
+	}
+
+	
+	private void tranfileFileWithJingle()
+	{
+		
+		JingleFileTransferBean jingleFileTransferBean=new JingleFileTransferBean();
+		
+		jingleFileTransferBean.setTo("#tf.wangbotest@tongfang.igrslink.com");
+		jingleFileTransferBean.setFileType( FileType.music);
+		jingleFileTransferBean.setTransferFilePath("http://10.0.0.15:10001/.mp3");
+		igrsBaseProxyManager.sendQueryBaseBean(jingleFileTransferBean,notifyHandler,IgrsTag.JINGLE_RECEIVED_FILE);
+		
+	}
+	/**
+	 * 用户要获取地址的地址，和注册的回调函数
+	 */
+	private void sendLocalHostAddressCallBack() {
+		
+		ResouceLocalAddressUrlBean resouceLocalAddressUrlBean = new ResouceLocalAddressUrlBean();
+		resouceLocalAddressUrlBean.setRequest(true);
+
+		String filePath = android.os.Environment.getExternalStorageDirectory()
+				.toString();
+		filePath = "/mnt/sdcard/test.mp3";
+		resouceLocalAddressUrlBean.setAsolutePath(filePath);
+		igrsBaseProxyManager.sendQueryBaseBean(resouceLocalAddressUrlBean,null,null);
+
+	}
+/************************************************************************************************/
+	/**
+	 * 开启或者关闭基础协议栈
+	 *//*
+	private void startIgrsBaseService()
+	{
+		
+		  ActivityManager mActivityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+
+		  List<ActivityManager.RunningServiceInfo> mServiceList = mActivityManager.getRunningServices(30);
+			
+		  final String igrsBaseClassName = "com.igrs.base.ProviderRemoteService";
+		  if (!IgrsBaseServiceIsStart(mServiceList, igrsBaseClassName)) {
+                           startService(new Intent(igrsBaseClassName));
+			}
+	}*/
+	/**
+	 * 关闭基础协议栈
+
+	private void closedIgrsBaseService()
+	{
+		
+		  ActivityManager mActivityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+
+		  List<ActivityManager.RunningServiceInfo> mServiceList = mActivityManager.getRunningServices(30);
+			
+		  final String igrsBaseClassName = "com.igrs.base.ProviderRemoteService";
+		  if (IgrsBaseServiceIsStart(mServiceList, igrsBaseClassName)) {
+			  mActivityManager.killBackgroundProcesses(igrsBaseClassName);
+			}
+	}	 */
+	
+    private boolean IgrsBaseServiceIsStart(List<ActivityManager.RunningServiceInfo> mServiceList,String className) {
+       for (int i = 0; i < mServiceList.size(); i++) {
+		if (className.equals(mServiceList.get(i).service.getClassName())) {
+			return true;
+		 }
+	   }
+	  return false;
+    }
+/***********************************************************************************************************************/
+	/**
+	 * 修改本机名次,建议serviceName必须是A-Z|a-z|0-9的字母组合,并且长度不能超过20，才能够修改成功
+	 */
+	  public void renameServiceName(String reName) {
+		
+		RenameDevicesBean renameDevicesBean = new RenameDevicesBean();
+		renameDevicesBean.setServiceName(reName);
+		igrsBaseProxyManager.sendQueryBaseBean(renameDevicesBean,null,null);
+	}
+
+	public void closeOrstartLanBaseService(int values){
+			    LanServiceBean lanServiceBean = new LanServiceBean();
+				lanServiceBean.setStartLanService(true);
+				lanServiceBean.setOperterAction(values);
+				lanServiceBean.setFactoryId("hisense");
+				lanServiceBean.setFactoryName("hisense");
+				igrsBaseProxyManager.sendQueryBaseBean(lanServiceBean,null,null);	
+	}
+	 public void levoloAutoLogin(CurrentConnectUserInfoBean currentConnectUserInfoBean,Handler getMessageHandler) {
+		 igrsBaseProxyManager.sendQueryBaseBean(currentConnectUserInfoBean,getMessageHandler,"loginLenovo");	
+	 }
+	
+	
+	/**
+	 * register handler callback
+	 */
+	private void initHandlerCallBack() {
+		//注册空间回调函数，其handler 处理相关回调
+		igrsBaseProxyManager.registerIgrsProxyResultConnectHandler(
+				IgrsTag.RELOCAL_ADDRESS, notifyHandler);
+		// igrsBaseProxyManager.registerIgrsProxyResultConnectHandler(IgrsTag.RENAME,notifyHandler);
+	}
+
+	private void proptMsg(String displayMsg)
+	{
+		Context context = MainActivity.this;
+		Dialog dialog = new AlertDialog.Builder(context).setTitle("发送测试").setMessage(displayMsg)
+		.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+
+            	dialog.dismiss();
+            }
+        })
+      .create();
+		dialog.show();
+	}
+	OnItemClickListener iemClickListener = new OnItemClickListener() {
+
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position,long id) {
+			String igrsLanInfo = myAdapter.getItem(position);
+			if (igrsLanInfo != null) {
+				/*MainActivity.deviceid=igrsLanInfo.getServiceName();
+			 	LanReferenceCmdInfoBean lanReferenceCmdInfoBean=new LanReferenceCmdInfoBean();
+				lanReferenceCmdInfoBean.setCmdClass("msgInputMethod");
+       			lanReferenceCmdInfoBean.setCmdType("input");
+       			lanReferenceCmdInfoBean.setCmdCtrl("set");
+       			lanReferenceCmdInfoBean.setCmdParam("igrs");
+       			String cotnrent=(String)url.getText().toString();
+       			lanReferenceCmdInfoBean.setCmdValue(cotnrent);
+       			lanReferenceCmdInfoBean.setNetworkType( NetworkType .LANNETWORK);
+       			lanReferenceCmdInfoBean.setTo(igrsLanInfo.getServiceName());
+       			Messenger msg = new Messenger(netConnectHandler);
+       			try {
+    				igrsBaseExporterLanService.sendLanCmdMessage(lanReferenceCmdInfoBean, msg);
+    			} catch (RemoteException e) {
+    				e.printStackTrace();
+    			}*/
+       			who =  igrsLanInfo;
+       			
+       			/*Thread thread=new Thread()
+       			{
+       				public void run()
+       				{
+       					Map<String, String> condtionsQ = new HashMap<String, String>();
+       	       			condtionsQ.put("title", "名称");
+       	       			condtionsQ.put("gid","http://localhost:8080/content");
+       	       			condtionsQ.put("videoId", "videoId");
+       	       			condtionsQ.put("albumId", "albumid");
+       	       			condtionsQ.put("offset", "0");
+       	       			condtionsQ.put("deviceid", who);
+       	       			transmissionMultiMediaManager.sendNetResourceToLanFriends(FileType.pptv,
+       	       					condtionsQ);
+       				}
+       			};
+       			
+       			thread.start();*/
+       		
+			}
+
+		}
+
+	};
+	
+	private void updateTabBackground(final TabHost tabHost) {
+		for (int i = 0; i < tabHost.getTabWidget().getChildCount(); i++) {
+			View vvv = tabHost.getTabWidget().getChildAt(i);
+			if (tabHost.getCurrentTab() == i) {
+				// 选中后的背景
+				vvv.setBackgroundDrawable(getResources().getDrawable(
+						android.R.drawable.spinner_background));
+			} else {
+				// 非选择的背景
+				vvv.setBackgroundDrawable(getResources().getDrawable(
+						android.R.drawable.screen_background_dark));
+			}
+		}
+	}
+	class PageTask extends AsyncTask<String, Integer, String> {
+	        // 可变长的输入参数，与AsyncTask.exucute()对应
+	        ProgressDialog pdialog;
+	        public PageTask(Context context){
+	            pdialog = new ProgressDialog(context, 0);   
+	            pdialog.setButton("cancel", new DialogInterface.OnClickListener() {
+	             public void onClick(DialogInterface dialog, int i) {
+	             //  dialog.cancel();
+	             }
+	            });
+	            pdialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+	             public void onCancel(DialogInterface dialog) {
+	              finish();
+	             }
+	            });
+	            pdialog.setCancelable(true);
+	            pdialog.setMax(100);
+	            pdialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	            pdialog.show();
+
+
+	        }
+	        @Override
+	        protected String doInBackground(String... params) {
+
+	            try{
+
+	               HttpClient client = new DefaultHttpClient();
+	               // params[0]代表连接的url
+	               HttpGet get = new HttpGet(params[0]);
+	               HttpResponse response = client.execute(get);
+	               HttpEntity entity = response.getEntity();
+	               long length = entity.getContentLength();
+	               InputStream is = entity.getContent();
+	               String s = null;
+	               if(is != null) {
+	                   ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+	                   byte[] buf = new byte[128];
+
+	                   int ch = -1;
+
+	                   int count = 0;
+
+	                   while((ch = is.read(buf)) != -1) {
+
+	                      baos.write(buf, 0, ch);
+
+	                      count += ch;
+
+	                      if(length > 0) {
+	                          // 如果知道响应的长度，调用publishProgress（）更新进度
+	                          publishProgress((int) ((count / (float) length) * 100));
+	                      }
+
+	                      // 让线程休眠100ms
+	                      Thread.sleep(100);
+	                   }
+	                   s = new String(baos.toByteArray());              }
+	               // 返回结果
+	               return s;
+	            } catch(Exception e) {
+	               e.printStackTrace();
+
+	            }
+
+	            return null;
+
+	        }
+
+	        @Override
+	        protected void onCancelled() {
+	            super.onCancelled();
+	        }
+
+	        @Override
+	        protected void onPostExecute(String result) {
+	            // 返回HTML页面的内容
+	            message.setText(result);
+	           // pdialog.dismiss(); 
+	        }
+
+	        @Override
+	        protected void onPreExecute() {
+	            // 任务启动，可以在这里显示一个对话框，这里简单处理
+	            message.setText("开始");
+	        }
+
+	        @Override
+	        protected void onProgressUpdate(Integer... values) {
+	            // 更新进度
+	              System.out.println(""+values[0]);
+	              message.setText(""+values[0]);
+	              pdialog.setProgress(values[0]);
+	        }
+	     }
+	
+	
+}
