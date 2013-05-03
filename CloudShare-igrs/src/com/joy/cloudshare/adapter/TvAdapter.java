@@ -57,8 +57,10 @@ public class TvAdapter extends BaseAdapter {
 		if(index == position){
 //			holder.mDeviceCheckbox.toggle();
 			holder.mDeviceCheckbox.setChecked(true);
+			 convertView.setBackgroundResource(R.drawable.ic_list_focus);
 		}else{
 			holder.mDeviceCheckbox.setChecked(false);
+			 convertView.setBackgroundResource(R.drawable.list_item_selector);
 		}
 		holder.mDeviceNameTextView.setText(tempDevice.getServiceName()); 
 		holder.mDeviceCheckbox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {

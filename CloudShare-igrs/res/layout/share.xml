@@ -8,16 +8,15 @@
         android:id="@+id/set_title_layout"
         android:layout_width="match_parent"
         android:layout_height="@dimen/head_bar_height"
-        android:background="@drawable/ic_title_bg"
- >
+        android:background="@drawable/ic_title_bg" >
 
         <Button
             android:id="@+id/set_title_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:background="@drawable/back_selector"
             android:layout_centerVertical="true"
+            android:background="@drawable/back_selector"
             android:gravity="center"
             android:text="返回"
             android:textColor="@color/text_color_white" />
@@ -25,22 +24,23 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-          android:layout_centerVertical="true"
-          android:layout_centerHorizontal="true"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
             android:text="设置共享"
             android:textColor="@color/text_color_white"
-            android:textSize="@dimen/set_content_text_size" />
-        
+            android:textSize="@dimen/head_bar_title_text_size" />
+
         <Button
             android:id="@+id/set_title_submit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-             android:layout_centerVertical="true"
-             android:layout_marginRight="15px"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="15px"
             android:background="@drawable/device_selector"
             android:gravity="center"
             android:text="提交"
+            android:visibility="gone"
             android:textColor="@color/text_color_white" />
     </RelativeLayout>
 
@@ -49,8 +49,8 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/set_content_layout_height"
         android:layout_below="@+id/set_title_layout"
+        android:layout_marginLeft="@dimen/set_content_layout_margin"
         android:clickable="true"
-           android:layout_marginLeft="@dimen/set_content_layout_margin"
         android:gravity="center_vertical" >
 
         <TextView
@@ -58,9 +58,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-             android:textColor="@color/set_content_text_color"
-            android:textSize="@dimen/set_content_text_size"
-            android:text="本地目录:" />
+            android:text="本地目录:"
+            android:textColor="@color/set_content_text_color"
+            android:textSize="@dimen/set_content_text_size" />
 
         <TextView
             android:id="@+id/share_dir"
@@ -70,7 +70,6 @@
             android:text="本地目录"
             android:textColor="@color/set_content_text_color"
             android:textSize="@dimen/set_content_text_size" />
-
     </RelativeLayout>
 
     <RelativeLayout
@@ -81,14 +80,17 @@
         android:layout_centerHorizontal="true"
         android:clickable="true"
         android:gravity="center_vertical" >
-        <ListView 
+
+        <ListView
             android:id="@+id/dir_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-           >
-            
+            android:background="@color/text_color_white"
+            android:listSelector="@drawable/list_item_selector"
+            android:scrollbarSize="13px"
+            android:scrollbarStyle="insideOverlay"
+            android:scrollbarThumbVertical="@drawable/ic_scrollbar_bg" >
         </ListView>
-
     </RelativeLayout>
 
 </RelativeLayout>

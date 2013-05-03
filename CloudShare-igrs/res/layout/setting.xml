@@ -27,7 +27,7 @@
             android:layout_centerInParent="true"
             android:text="设置"
             android:textColor="@color/text_color_white"
-            android:textSize="@dimen/set_content_text_size" />
+            android:textSize="@dimen/head_bar_title_text_size" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -54,6 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/set_share_logo"
+            android:layout_marginLeft="15px"
             android:text="设置共享"
             android:textColor="@color/set_content_text_color"
             android:textSize="@dimen/set_content_text_size" />
@@ -91,6 +92,7 @@
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/set_device_logo"
             android:text="切换设备"
+            android:layout_marginLeft="15px"
             android:textColor="@color/set_content_text_color"
             android:textSize="@dimen/set_content_text_size" />
 

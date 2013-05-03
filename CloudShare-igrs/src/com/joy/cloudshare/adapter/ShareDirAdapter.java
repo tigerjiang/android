@@ -62,8 +62,10 @@ public class ShareDirAdapter extends BaseAdapter {
 		}
 		if(mSelectedIndex == position){
 			holder.mDirCheckbox.toggle();
+			 convertView.setBackgroundResource(R.drawable.ic_list_focus);
 		}else{
 			holder.mDirCheckbox.setChecked(false);
+			 convertView.setBackgroundResource(R.drawable.list_item_selector);
 		}
 		holder.mDirNameTextView.setText(tempFile.getName()); 
 		holder.mDirCheckbox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {

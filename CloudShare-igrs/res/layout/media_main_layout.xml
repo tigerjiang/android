@@ -67,7 +67,8 @@
         android:id="@+id/media_file_type_layout"
         android:layout_width="match_parent"
         android:layout_height="@dimen/media_content_layout_height"
-        android:orientation="horizontal" >
+        android:orientation="horizontal"
+        android:background="@drawable/ic_content_bg" >
 
         <RadioButton
             android:id="@+id/media_pic_layout"
